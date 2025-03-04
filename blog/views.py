@@ -1,6 +1,9 @@
-from rest_framework import generics, permissions
+from rest_framework import generics, permissions, status
+from rest_framework.response import Response
+from django.contrib.auth.models import User
+from django.db.utils import IntegrityError
 from .models import Article, Comment
-from .serializers import ArticleSerializer, CommentSerializer
+from .serializers import ArticleSerializer, CommentSerializer, UserSerializer
 
 
 class ArticleListCreateView(generics.ListCreateAPIView):
@@ -39,3 +42,27 @@ class CommentDetailView(generics.RetrieveDestroyAPIView):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+
+class RegisterView(generics.CreateAPIView):
+    """API endpoint for user registration"""
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+    def create(self, request, *args, **kwargs):
+        """Handle user registration with error handling"""
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            try:
+                user = serializer.save()
+                return Response(
+                    {"message": "User registered successfully",
+                        "user": UserSerializer(user).data},
+                    status=status.HTTP_201_CREATED
+                )
+            except IntegrityError:
+                return Response(
+                    {"error": "Username or email already exists"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
