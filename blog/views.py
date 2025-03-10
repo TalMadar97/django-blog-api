@@ -71,7 +71,7 @@ class RegisterView(generics.CreateAPIView):
 
 
 class ProfileView(APIView):
-    """API endpoint for retrieving the authenticated user's profile"""
+    """API endpoint for retrieving and updating the authenticated user's profile"""
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -79,3 +79,12 @@ class ProfileView(APIView):
         user = request.user
         serializer = UserSerializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def put(self, request):
+        """Update the authenticated user's profile"""
+        user = request.user
+        serializer = UserSerializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
