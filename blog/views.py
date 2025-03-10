@@ -1,18 +1,31 @@
-from rest_framework import generics, permissions, status
+from rest_framework import generics, permissions, status, filters
 from rest_framework.response import Response
 from django.contrib.auth.models import User
 from django.db.utils import IntegrityError
 from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from django_filters.rest_framework import DjangoFilterBackend
 from .models import Article, Comment
 from .serializers import ArticleSerializer, CommentSerializer, UserSerializer
+
+
+class IsOwnerOrReadOnly(permissions.BasePermission):
+    """Permission class to allow only the owner to edit or delete"""
+
+    def has_object_permission(self, request, view, obj):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        return obj.author == request.user
 
 
 class ArticleListCreateView(generics.ListCreateAPIView):
     """View to list all articles and create a new article"""
     queryset = Article.objects.all()
     serializer_class = ArticleSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_fields = ['title', 'content']
+    search_fields = ['title', 'content']
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
@@ -22,7 +35,7 @@ class ArticleDetailView(generics.RetrieveUpdateDestroyAPIView):
     """View to retrieve, update, and delete a specific article"""
     queryset = Article.objects.all()
     serializer_class = ArticleSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [IsOwnerOrReadOnly]
 
 
 class CommentListCreateView(generics.ListCreateAPIView):
