@@ -11,10 +11,16 @@ class Article(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     likes = models.ManyToManyField(
         User, related_name="liked_articles", blank=True)
+    favorited_by = models.ManyToManyField(
+        User, related_name="favorite_articles", blank=True)
 
     def total_likes(self):
         """Return the total number of likes"""
         return self.likes.count()
+
+    def total_favorites(self):
+        """Return the total number of users who favorited the article"""
+        return self.favorited_by.count()
 
     def __str__(self):
         return self.title

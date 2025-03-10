@@ -143,3 +143,30 @@ def like_article(request, article_id):
             return Response({"message": "Article liked"}, status=status.HTTP_201_CREATED)
     except Article.DoesNotExist:
         return Response({"error": "Article not found"}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def toggle_favorite(request, article_id):
+    """Allow users to add/remove an article from their favorites"""  # 🔥 Added favorite toggle feature
+    try:
+        article = Article.objects.get(id=article_id)
+        if request.user in article.favorited_by.all():
+            article.favorited_by.remove(request.user)
+            return Response({"message": "Article removed from favorites"}, status=status.HTTP_200_OK)
+        else:
+            article.favorited_by.add(request.user)
+            return Response({"message": "Article added to favorites"}, status=status.HTTP_201_CREATED)
+    except Article.DoesNotExist:
+        return Response({"error": "Article not found"}, status=status.HTTP_404_NOT_FOUND)
+
+
+class FavoriteArticlesView(generics.ListAPIView):
+    """View to list all articles favorited by the logged-in user"""  # 🔥 Added view to retrieve favorite articles
+    serializer_class = ArticleSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        """Return only the articles favorited by the logged-in user"""
+        return Article.objects.filter(favorited_by=self.request.user)
+ 

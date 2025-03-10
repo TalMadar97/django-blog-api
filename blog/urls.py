@@ -3,7 +3,8 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from .views import (
     ArticleListCreateView, ArticleDetailView,
     CommentListCreateView, CommentDetailView,
-    RegisterView, ProfileView, like_article
+    RegisterView, ProfileView, like_article,
+    toggle_favorite, FavoriteArticlesView  
 )
 
 urlpatterns = [
@@ -17,6 +18,12 @@ urlpatterns = [
     path('articles/', ArticleListCreateView.as_view(), name='article-list'),
     path('articles/<int:pk>/', ArticleDetailView.as_view(), name='article-detail'),
     path('articles/<int:article_id>/like/', like_article, name='like-article'),
+
+    # Favorites
+    path('articles/<int:article_id>/favorite/', toggle_favorite,
+         name='toggle-favorite'),  
+    path('articles/favorites/', FavoriteArticlesView.as_view(),
+         name='favorite-articles'),  
 
     # Comments
     path('articles/<int:article_id>/comments/',
