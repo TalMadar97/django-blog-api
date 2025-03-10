@@ -25,18 +25,18 @@ class UserSerializer(serializers.ModelSerializer):
 class ArticleSerializer(serializers.ModelSerializer):
     """Serializer for articles"""
     author = UserSerializer(read_only=True)
+    total_likes = serializers.IntegerField(
+        source="likes.count", read_only=True)
 
     class Meta:
         model = Article
-        fields = ['id', 'title', 'content',
-                  'author', 'created_at', 'updated_at']
+        fields = ['id', 'title', 'content', 'author',
+                  'created_at', 'updated_at', 'total_likes']
 
 
 class CommentSerializer(serializers.ModelSerializer):
     """Serializer for comments"""
     user = UserSerializer(read_only=True)
-    article = serializers.PrimaryKeyRelatedField(
-        queryset=Article.objects.all(), write_only=True, required=False)
 
     class Meta:
         model = Comment

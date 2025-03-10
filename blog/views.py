@@ -1,16 +1,17 @@
 from rest_framework import generics, permissions, status, filters
 from rest_framework.response import Response
-from django.contrib.auth.models import User
-from django.db.utils import IntegrityError
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from django_filters.rest_framework import DjangoFilterBackend
+from django.contrib.auth.models import User
+from django.db.utils import IntegrityError
 from .models import Article, Comment
 from .serializers import ArticleSerializer, CommentSerializer, UserSerializer
 
 
 class IsOwnerOrReadOnly(permissions.BasePermission):
-    """Permission class to allow only the owner to edit or delete"""
+    """Permission class to allow only the article owner to edit or delete"""
 
     def has_object_permission(self, request, view, obj):
         if request.method in permissions.SAFE_METHODS:
@@ -116,3 +117,19 @@ class ProfileView(APIView):
         user = request.user
         user.delete()
         return Response({"message": "User deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def like_article(request, article_id):
+    """Allow users to like/unlike an article"""
+    try:
+        article = Article.objects.get(id=article_id)
+        if request.user in article.likes.all():
+            article.likes.remove(request.user)
+            return Response({"message": "Like removed"}, status=status.HTTP_200_OK)
+        else:
+            article.likes.add(request.user)
+            return Response({"message": "Article liked"}, status=status.HTTP_201_CREATED)
+    except Article.DoesNotExist:
+        return Response({"error": "Article not found"}, status=status.HTTP_404_NOT_FOUND)
