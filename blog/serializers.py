@@ -37,6 +37,8 @@ class ArticleSerializer(serializers.ModelSerializer):
 class CommentSerializer(serializers.ModelSerializer):
     """Serializer for comments"""
     user = UserSerializer(read_only=True)
+    article = serializers.PrimaryKeyRelatedField(
+        queryset=Article.objects.all(), required=False)  
 
     class Meta:
         model = Comment

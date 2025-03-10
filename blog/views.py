@@ -1,4 +1,4 @@
-from rest_framework import generics, permissions, status, filters
+from rest_framework import generics, permissions, status, filters, serializers
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.views import APIView
@@ -36,6 +36,7 @@ class ArticleListCreateView(generics.ListCreateAPIView):
     search_fields = ['title', 'content']
 
     def perform_create(self, serializer):
+        """Associate the article with the logged-in user"""
         serializer.save(author=self.request.user)
 
 
@@ -53,13 +54,22 @@ class CommentListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         """Return comments related to a specific article"""
-        article_id = self.kwargs['article_id']
+        article_id = self.kwargs.get('article_id')
         return Comment.objects.filter(article_id=article_id)
 
     def perform_create(self, serializer):
         """Automatically associate comment with article from URL"""
-        article = Article.objects.get(pk=self.kwargs['article_id'])
-        serializer.save(user=self.request.user, article=article)
+        article_id = self.kwargs.get('article_id')
+
+        if not article_id:
+            raise serializers.ValidationError(
+                {"error": "Article ID is missing"})
+
+        try:
+            article = Article.objects.get(pk=article_id)
+            serializer.save(user=self.request.user, article=article)
+        except Article.DoesNotExist:
+            raise serializers.ValidationError({"error": "Article not found"})
 
 
 class CommentDetailView(generics.RetrieveDestroyAPIView):
