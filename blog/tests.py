@@ -1,7 +1,8 @@
 from django.contrib.auth.models import User
 from rest_framework.test import APITestCase
 from rest_framework import status
-from .models import Article, Comment
+from django.core.files.uploadedfile import SimpleUploadedFile
+from .models import Article, Comment, Profile
 
 
 class BlogAPITestCase(APITestCase):
@@ -23,12 +24,64 @@ class BlogAPITestCase(APITestCase):
 
         # Create a test article
         self.article = Article.objects.create(
-            title="Test Article", content="Test content", author=self.user, tags="Python,Django"
+            title="Test Article", content="Test content", author=self.user, tags=["Python", "Django"]
         )
 
-        # 🔥 Debug - הדפסת המאמרים כדי לראות איך הם נשמרים
-        print("DEBUG - Saved Articles in DB:")
-        print(Article.objects.values("id", "title", "tags"))
+        # 🔥 Debugging - Print saved articles
+        print("DEBUG - Saved Articles in DB:",
+              Article.objects.values("id", "title", "tags"))
+
+    def test_register_user_creates_profile(self):
+        """Test user registration creates a profile"""
+        data = {
+            "username": "newuser",
+            "email": "newuser@example.com",
+            "password": "newpassword123",
+            "profile": {"bio": "I love testing!", "avatar": None}
+        }
+        response = self.client.post("/api/register/", data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(Profile.objects.filter(
+            user__username="newuser").exists())
+
+    def test_get_user_profile(self):
+        """Test retrieving the user profile"""
+        response = self.client.get("/api/profile/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("profile", response.data)
+
+    def test_update_user_profile_with_avatar(self):
+        """Test updating user profile with an avatar"""
+        avatar = SimpleUploadedFile(
+            "avatar.jpg", b"file_content", content_type="image/jpeg")
+        data = {"profile": {"bio": "Updated Bio", "avatar": avatar}}
+        response = self.client.put("/api/profile/", data, format="multipart")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(Profile.objects.get(
+            user=self.user).bio, "Updated Bio")
+
+    def test_create_article_with_thumbnail(self):
+        """Test creating an article with a thumbnail"""
+        thumbnail = SimpleUploadedFile(
+            "thumbnail.jpg", b"file_content", content_type="image/jpeg")
+        data = {
+            "title": "Article with Thumbnail",
+            "content": "Content",
+            "tags": ["Tech"],
+            "thumbnail": thumbnail
+        }
+        response = self.client.post("/api/articles/", data, format="multipart")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIn("thumbnail", response.data)
+
+    def test_update_article_thumbnail(self):
+        """Test updating an article's thumbnail"""
+        thumbnail = SimpleUploadedFile(
+            "new_thumbnail.jpg", b"new_content", content_type="image/jpeg")
+        data = {"thumbnail": thumbnail}
+        response = self.client.put(
+            f"/api/articles/{self.article.id}/", data, format="multipart")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_register_user(self):
         """Test user registration"""
@@ -53,8 +106,6 @@ class BlogAPITestCase(APITestCase):
         }
         response = self.client.post("/api/articles/", data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-        # ✅ תיקון: שימוש ישיר במערך (אין צורך ב-`.split(",")`)
         self.assertEqual(
             sorted(response.data["tags"]), sorted(["Tech", "Python"]))
 
@@ -69,7 +120,6 @@ class BlogAPITestCase(APITestCase):
         response = self.client.get("/api/articles/?search=Python")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        # 🔥 Debug - הדפסת תגיות מהתוצאה
         print("DEBUG - Response Data:", response.data)
 
         found = any("Python" in article["tags"] for article in response.data)
@@ -82,8 +132,6 @@ class BlogAPITestCase(APITestCase):
         response = self.client.put(f"/api/articles/{self.article.id}/", data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["title"], "Updated Title")
-
-        # ✅ תיקון: שימוש ישיר במערך (אין צורך ב-`.split(",")`)
         self.assertEqual(sorted(response.data["tags"]), sorted(["UpdatedTag"]))
 
     def test_delete_article(self):
@@ -97,7 +145,6 @@ class BlogAPITestCase(APITestCase):
         response = self.client.post(
             f"/api/articles/{self.article.id}/comments/", data)
 
-        # Debugging
         print("Response Data:", response.data)
         print("Response Status Code:", response.status_code)
 
