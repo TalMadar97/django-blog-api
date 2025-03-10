@@ -14,6 +14,9 @@ class Article(models.Model):
     favorited_by = models.ManyToManyField(
         User, related_name="favorite_articles", blank=True)
 
+    # ✅ שמירת תגיות כ-JSONField
+    tags = models.JSONField(default=list, blank=True)
+
     def total_likes(self):
         """Return the total number of likes"""
         return self.likes.count()

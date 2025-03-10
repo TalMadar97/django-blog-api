@@ -10,6 +10,16 @@ from .models import Article, Comment
 from .serializers import ArticleSerializer, CommentSerializer, UserSerializer
 
 
+class CustomTagSearchFilter(filters.BaseFilterBackend):
+    """Custom filter to enable searching by tags in JSONField"""
+
+    def filter_queryset(self, request, queryset, view):
+        search_query = request.query_params.get('search', None)
+        if search_query:
+            queryset = queryset.filter(tags__icontains=search_query)
+        return queryset
+
+
 class IsOwnerOrReadOnly(permissions.BasePermission):
     """Permission class to allow only the article owner to edit or delete"""
 
@@ -31,7 +41,8 @@ class ArticleListCreateView(generics.ListCreateAPIView):
     queryset = Article.objects.all()
     serializer_class = ArticleSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filter_backends = [DjangoFilterBackend,
+                       filters.SearchFilter, CustomTagSearchFilter]
     filterset_fields = ['title', 'content']
     search_fields = ['title', 'content']
 
@@ -148,7 +159,7 @@ def like_article(request, article_id):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def toggle_favorite(request, article_id):
-    """Allow users to add/remove an article from their favorites"""  # 🔥 Added favorite toggle feature
+    """Allow users to add/remove an article from their favorites"""
     try:
         article = Article.objects.get(id=article_id)
         if request.user in article.favorited_by.all():
@@ -162,11 +173,10 @@ def toggle_favorite(request, article_id):
 
 
 class FavoriteArticlesView(generics.ListAPIView):
-    """View to list all articles favorited by the logged-in user"""  # 🔥 Added view to retrieve favorite articles
+    """View to list all articles favorited by the logged-in user"""
     serializer_class = ArticleSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         """Return only the articles favorited by the logged-in user"""
         return Article.objects.filter(favorited_by=self.request.user)
- 

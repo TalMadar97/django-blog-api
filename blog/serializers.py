@@ -27,18 +27,37 @@ class ArticleSerializer(serializers.ModelSerializer):
     author = UserSerializer(read_only=True)
     total_likes = serializers.IntegerField(
         source="likes.count", read_only=True)
+    total_favorites = serializers.IntegerField(
+        source="favorited_by.count", read_only=True)
+
+    # ✅ תומך בתגיות כ-JSONField
+    tags = serializers.ListField(
+        child=serializers.CharField(), required=False, default=list)
 
     class Meta:
         model = Article
-        fields = ['id', 'title', 'content', 'author',
-                  'created_at', 'updated_at', 'total_likes']
+        fields = ['id', 'title', 'content', 'author', 'created_at',
+                  'updated_at', 'total_likes', 'total_favorites', 'tags']
+
+    def create(self, validated_data):
+        """Handle tag processing before creating an article"""
+        tags = validated_data.pop('tags', [])
+        article = Article.objects.create(**validated_data, tags=tags)
+        return article
+
+    def update(self, instance, validated_data):
+        """Handle tag processing when updating an article"""
+        tags = validated_data.pop('tags', None)
+        if tags is not None:
+            instance.tags = tags
+        return super().update(instance, validated_data)
 
 
 class CommentSerializer(serializers.ModelSerializer):
     """Serializer for comments"""
     user = UserSerializer(read_only=True)
     article = serializers.PrimaryKeyRelatedField(
-        queryset=Article.objects.all(), required=False)  
+        queryset=Article.objects.all(), required=False)
 
     class Meta:
         model = Comment
