@@ -103,7 +103,7 @@ class RegisterView(generics.CreateAPIView):
                 user = serializer.save()
                 return Response(
                     {"message": "User registered successfully",
-                        "user": UserSerializer(user).data},
+                     "user": UserSerializer(user).data},
                     status=status.HTTP_201_CREATED
                 )
             except IntegrityError:
@@ -128,8 +128,14 @@ class ProfileView(APIView):
         """Update the authenticated user's profile"""
         user = request.user
         profile, _ = Profile.objects.get_or_create(user=user)
-        serializer = ProfileSerializer(
-            profile, data=request.data, partial=True)
+
+        if request.content_type == "application/json":
+            serializer = ProfileSerializer(
+                profile, data=request.data, partial=True)
+        else:
+            serializer = ProfileSerializer(
+                profile, data=request.data, partial=True)
+
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)

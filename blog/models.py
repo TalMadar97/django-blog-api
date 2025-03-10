@@ -5,12 +5,13 @@ from django.contrib.auth.models import User
 class Profile(models.Model):
     """Profile model for additional user information"""
     user = models.OneToOneField(
-        User, on_delete=models.CASCADE, related_name="profile")
+        User, on_delete=models.CASCADE, related_name="profile"
+    )
     bio = models.TextField(blank=True)
     avatar = models.ImageField(upload_to="avatars/", blank=True, null=True)
 
     def __str__(self):
-        return f"{self.user.username}'s Profile"
+        return f"Profile of {self.user.username}"
 
 
 class Article(models.Model):
@@ -26,8 +27,10 @@ class Article(models.Model):
         User, related_name="favorite_articles", blank=True)
     tags = models.JSONField(default=list, blank=True)
 
+    # ✅ Removed related_name
     thumbnail = models.ImageField(
-        upload_to="thumbnails/", blank=True, null=True)
+        upload_to="thumbnails/", blank=True, null=True
+    )
 
     def total_likes(self):
         return self.likes.count()
@@ -36,16 +39,17 @@ class Article(models.Model):
         return self.favorited_by.count()
 
     def __str__(self):
-        return self.title
+        return f"Article: {self.title} by {self.author.username}"
 
 
 class Comment(models.Model):
     """Model for comments"""
     article = models.ForeignKey(
-        Article, on_delete=models.CASCADE, related_name="comments")
+        Article, on_delete=models.CASCADE, related_name="comments"
+    )
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Comment by {self.user.username} on {self.article.title}"
+        return f"{self.user.username} on {self.article.title[:20]}: {self.content[:30]}"

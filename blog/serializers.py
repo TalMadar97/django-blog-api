@@ -5,6 +5,8 @@ from .models import Article, Comment, Profile
 
 class ProfileSerializer(serializers.ModelSerializer):
     """Serializer for user profile"""
+    avatar = serializers.ImageField(required=False, allow_null=True)
+
     class Meta:
         model = Profile
         fields = ['bio', 'avatar']
@@ -31,6 +33,22 @@ class UserSerializer(serializers.ModelSerializer):
         Profile.objects.create(user=user, **profile_data)
         return user
 
+    def update(self, instance, validated_data):
+        """Update user and profile"""
+        profile_data = validated_data.pop('profile', None)
+        instance.username = validated_data.get('username', instance.username)
+        instance.email = validated_data.get('email', instance.email)
+
+        if profile_data:
+            profile = instance.profile
+            profile.bio = profile_data.get('bio', profile.bio)
+            if 'avatar' in profile_data:
+                profile.avatar = profile_data['avatar']
+            profile.save()
+
+        instance.save()
+        return instance
+
 
 class ArticleSerializer(serializers.ModelSerializer):
     """Serializer for articles"""
@@ -41,8 +59,6 @@ class ArticleSerializer(serializers.ModelSerializer):
         source="favorited_by.count", read_only=True)
     tags = serializers.ListField(
         child=serializers.CharField(), required=False, default=list)
-
-    # ✅ הוספתי שדה תמונת שער למאמרים
     thumbnail = serializers.ImageField(required=False, allow_null=True)
 
     class Meta:
@@ -61,6 +77,10 @@ class ArticleSerializer(serializers.ModelSerializer):
         tags = validated_data.pop('tags', None)
         if tags is not None:
             instance.tags = tags
+
+        if 'thumbnail' in validated_data:
+            instance.thumbnail = validated_data['thumbnail']
+
         return super().update(instance, validated_data)
 
 

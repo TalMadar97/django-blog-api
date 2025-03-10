@@ -27,17 +27,13 @@ class BlogAPITestCase(APITestCase):
             title="Test Article", content="Test content", author=self.user, tags=["Python", "Django"]
         )
 
-        # 🔥 Debugging - Print saved articles
-        print("DEBUG - Saved Articles in DB:",
-              Article.objects.values("id", "title", "tags"))
-
     def test_register_user_creates_profile(self):
         """Test user registration creates a profile"""
         data = {
             "username": "newuser",
             "email": "newuser@example.com",
             "password": "newpassword123",
-            "profile": {"bio": "I love testing!", "avatar": None}
+            "profile": {"bio": "I love testing!"}
         }
         response = self.client.post("/api/register/", data, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -54,7 +50,7 @@ class BlogAPITestCase(APITestCase):
         """Test updating user profile with an avatar"""
         avatar = SimpleUploadedFile(
             "avatar.jpg", b"file_content", content_type="image/jpeg")
-        data = {"profile": {"bio": "Updated Bio", "avatar": avatar}}
+        data = {"bio": "Updated Bio", "avatar": avatar}
         response = self.client.put("/api/profile/", data, format="multipart")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(Profile.objects.get(
@@ -120,8 +116,6 @@ class BlogAPITestCase(APITestCase):
         response = self.client.get("/api/articles/?search=Python")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        print("DEBUG - Response Data:", response.data)
-
         found = any("Python" in article["tags"] for article in response.data)
         self.assertTrue(found, "Tag search did not return expected results")
 
@@ -144,10 +138,6 @@ class BlogAPITestCase(APITestCase):
         data = {"content": "Great article!"}
         response = self.client.post(
             f"/api/articles/{self.article.id}/comments/", data)
-
-        print("Response Data:", response.data)
-        print("Response Status Code:", response.status_code)
-
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_like_article(self):
