@@ -15,8 +15,7 @@ class UserSerializer(serializers.ModelSerializer):
         """Override create to handle password securely"""
         user = User(
             username=validated_data['username'],
-            email=validated_data.get('email', ''),
-            is_active=True  # Ensure the user is active so they can log in
+            email=validated_data.get('email', '')
         )
         user.set_password(validated_data['password'])  # Hash the password
         user.save()
@@ -36,6 +35,8 @@ class ArticleSerializer(serializers.ModelSerializer):
 class CommentSerializer(serializers.ModelSerializer):
     """Serializer for comments"""
     user = UserSerializer(read_only=True)
+    article = serializers.PrimaryKeyRelatedField(
+        queryset=Article.objects.all(), write_only=True, required=False)
 
     class Meta:
         model = Comment

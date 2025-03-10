@@ -18,6 +18,13 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
         return obj.author == request.user
 
 
+class IsCommentOwnerOrReadOnly(permissions.BasePermission):
+    """Permission class to allow only the comment owner to delete"""
+
+    def has_object_permission(self, request, view, obj):
+        return obj.user == request.user
+
+
 class ArticleListCreateView(generics.ListCreateAPIView):
     """View to list all articles and create a new article"""
     queryset = Article.objects.all()
@@ -49,14 +56,16 @@ class CommentListCreateView(generics.ListCreateAPIView):
         return Comment.objects.filter(article_id=article_id)
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        """Automatically associate comment with article from URL"""
+        article = Article.objects.get(pk=self.kwargs['article_id'])
+        serializer.save(user=self.request.user, article=article)
 
 
 class CommentDetailView(generics.RetrieveDestroyAPIView):
     """View to retrieve and delete a specific comment"""
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [IsCommentOwnerOrReadOnly]
 
 
 class RegisterView(generics.CreateAPIView):
