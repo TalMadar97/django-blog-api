@@ -6,8 +6,8 @@ from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnl
 from django_filters.rest_framework import DjangoFilterBackend
 from django.contrib.auth.models import User
 from django.db.utils import IntegrityError
-from .models import Article, Comment
-from .serializers import ArticleSerializer, CommentSerializer, UserSerializer
+from .models import Article, Comment, Profile
+from .serializers import ArticleSerializer, CommentSerializer, UserSerializer, ProfileSerializer
 
 
 class CustomTagSearchFilter(filters.BaseFilterBackend):
@@ -127,7 +127,9 @@ class ProfileView(APIView):
     def put(self, request):
         """Update the authenticated user's profile"""
         user = request.user
-        serializer = UserSerializer(user, data=request.data, partial=True)
+        profile, _ = Profile.objects.get_or_create(user=user)
+        serializer = ProfileSerializer(
+            profile, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)

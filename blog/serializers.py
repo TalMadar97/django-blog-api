@@ -1,24 +1,34 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Article, Comment
+from .models import Article, Comment, Profile
+
+
+class ProfileSerializer(serializers.ModelSerializer):
+    """Serializer for user profile"""
+    class Meta:
+        model = Profile
+        fields = ['bio', 'avatar']
 
 
 class UserSerializer(serializers.ModelSerializer):
     """Serializer for user registration"""
     password = serializers.CharField(write_only=True)
+    profile = ProfileSerializer(required=False)
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'password']
+        fields = ['id', 'username', 'email', 'password', 'profile']
 
     def create(self, validated_data):
-        """Override create to handle password securely"""
+        """Create user and profile"""
+        profile_data = validated_data.pop('profile', {})
         user = User(
             username=validated_data['username'],
             email=validated_data.get('email', '')
         )
-        user.set_password(validated_data['password'])  # Hash the password
+        user.set_password(validated_data['password'])
         user.save()
+        Profile.objects.create(user=user, **profile_data)
         return user
 
 
@@ -29,15 +39,16 @@ class ArticleSerializer(serializers.ModelSerializer):
         source="likes.count", read_only=True)
     total_favorites = serializers.IntegerField(
         source="favorited_by.count", read_only=True)
-
-    # ✅ תומך בתגיות כ-JSONField
     tags = serializers.ListField(
         child=serializers.CharField(), required=False, default=list)
+
+    # ✅ הוספתי שדה תמונת שער למאמרים
+    thumbnail = serializers.ImageField(required=False, allow_null=True)
 
     class Meta:
         model = Article
         fields = ['id', 'title', 'content', 'author', 'created_at',
-                  'updated_at', 'total_likes', 'total_favorites', 'tags']
+                  'updated_at', 'total_likes', 'total_favorites', 'tags', 'thumbnail']
 
     def create(self, validated_data):
         """Handle tag processing before creating an article"""
