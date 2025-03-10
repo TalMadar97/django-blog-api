@@ -103,14 +103,11 @@ class RegisterView(generics.CreateAPIView):
                 user = serializer.save()
                 return Response(
                     {"message": "User registered successfully",
-                     "user": UserSerializer(user).data},
+                        "user": UserSerializer(user).data},
                     status=status.HTTP_201_CREATED
                 )
             except IntegrityError:
-                return Response(
-                    {"error": "Username or email already exists"},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+                return Response({"error": "Username or email already exists"}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -128,13 +125,8 @@ class ProfileView(APIView):
         """Update the authenticated user's profile"""
         user = request.user
         profile, _ = Profile.objects.get_or_create(user=user)
-
-        if request.content_type == "application/json":
-            serializer = ProfileSerializer(
-                profile, data=request.data, partial=True)
-        else:
-            serializer = ProfileSerializer(
-                profile, data=request.data, partial=True)
+        serializer = ProfileSerializer(
+            profile, data=request.data, partial=True)
 
         if serializer.is_valid():
             serializer.save()

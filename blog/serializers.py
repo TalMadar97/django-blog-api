@@ -5,11 +5,10 @@ from .models import Article, Comment, Profile
 
 class ProfileSerializer(serializers.ModelSerializer):
     """Serializer for user profile"""
-    avatar = serializers.ImageField(required=False, allow_null=True)
 
     class Meta:
         model = Profile
-        fields = ['bio', 'avatar']
+        fields = ['bio']
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -42,8 +41,6 @@ class UserSerializer(serializers.ModelSerializer):
         if profile_data:
             profile = instance.profile
             profile.bio = profile_data.get('bio', profile.bio)
-            if 'avatar' in profile_data:
-                profile.avatar = profile_data['avatar']
             profile.save()
 
         instance.save()
@@ -59,12 +56,11 @@ class ArticleSerializer(serializers.ModelSerializer):
         source="favorited_by.count", read_only=True)
     tags = serializers.ListField(
         child=serializers.CharField(), required=False, default=list)
-    thumbnail = serializers.ImageField(required=False, allow_null=True)
 
     class Meta:
         model = Article
         fields = ['id', 'title', 'content', 'author', 'created_at',
-                  'updated_at', 'total_likes', 'total_favorites', 'tags', 'thumbnail']
+                  'updated_at', 'total_likes', 'total_favorites', 'tags']
 
     def create(self, validated_data):
         """Handle tag processing before creating an article"""
@@ -77,9 +73,6 @@ class ArticleSerializer(serializers.ModelSerializer):
         tags = validated_data.pop('tags', None)
         if tags is not None:
             instance.tags = tags
-
-        if 'thumbnail' in validated_data:
-            instance.thumbnail = validated_data['thumbnail']
 
         return super().update(instance, validated_data)
 

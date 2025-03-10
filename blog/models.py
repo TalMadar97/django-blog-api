@@ -8,7 +8,6 @@ class Profile(models.Model):
         User, on_delete=models.CASCADE, related_name="profile"
     )
     bio = models.TextField(blank=True)
-    avatar = models.ImageField(upload_to="avatars/", blank=True, null=True)
 
     def __str__(self):
         return f"Profile of {self.user.username}"
@@ -26,11 +25,6 @@ class Article(models.Model):
     favorited_by = models.ManyToManyField(
         User, related_name="favorite_articles", blank=True)
     tags = models.JSONField(default=list, blank=True)
-
-    # ✅ Removed related_name
-    thumbnail = models.ImageField(
-        upload_to="thumbnails/", blank=True, null=True
-    )
 
     def total_likes(self):
         return self.likes.count()
