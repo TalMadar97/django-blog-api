@@ -2,6 +2,8 @@ from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from django.contrib.auth.models import User
 from django.db.utils import IntegrityError
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
 from .models import Article, Comment
 from .serializers import ArticleSerializer, CommentSerializer, UserSerializer
 
@@ -66,3 +68,14 @@ class RegisterView(generics.CreateAPIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ProfileView(APIView):
+    """API endpoint for retrieving the authenticated user's profile"""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        """Return the authenticated user's data"""
+        user = request.user
+        serializer = UserSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
