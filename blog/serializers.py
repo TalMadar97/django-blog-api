@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import Article, Comment, Profile
+import re
 
 
 class ProfileSerializer(serializers.ModelSerializer):
@@ -19,6 +20,29 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'password', 'profile']
+
+    def validate_username(self, value):
+        """✅ Ensure username contains no spaces"""
+        if " " in value:
+            raise serializers.ValidationError(
+                "Username cannot contain spaces.")
+        return value
+
+    def validate_email(self, value):
+        """✅ Ensure the email is in a valid format"""
+        if not re.match(r"[^@]+@[^@]+\.[^@]+", value):
+            raise serializers.ValidationError("Enter a valid email address.")
+        return value
+
+    def validate_password(self, value):
+        """✅ Ensure password has at least 8 characters and one uppercase letter"""
+        if len(value) < 8:
+            raise serializers.ValidationError(
+                "Password must be at least 8 characters long.")
+        if not any(char.isupper() for char in value):
+            raise serializers.ValidationError(
+                "Password must contain at least one uppercase letter.")
+        return value
 
     def create(self, validated_data):
         """Create user and profile"""
