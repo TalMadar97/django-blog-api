@@ -146,6 +146,7 @@ REST_FRAMEWORK = {
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
+    "https://myblog-backend-lvtd.onrender.com",
     "http://127.0.0.1:3000"
 ]
 
