@@ -65,7 +65,7 @@ DATABASES = {
         'HOST': config('DB_HOST'),
         'PORT': config('DB_PORT'),
         'OPTIONS': {
-            'sslmode': 'require',  # ✅ חובה ל-Render!
+            'sslmode': 'prefer',
         }
     }
 }
