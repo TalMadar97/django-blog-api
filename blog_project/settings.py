@@ -27,7 +27,7 @@ SECRET_KEY = "django-insecure-*r5!-!5dq5mo1wrj)%9=^i$2f*1j6sqv+f7j@bwe)ptfp_@v#w
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["https://myblog-sd38.onrender.com/"]
+ALLOWED_HOSTS = ["myblog-backend-lvtd.onrender.com"]
 
 
 # Application definition
@@ -144,10 +144,11 @@ REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
+
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
-    "https://myblog-backend-lvtd.onrender.com",
-    "http://127.0.0.1:3000"
+    "http://127.0.0.1:3000",
+    "https://myblog-sd38.onrender.com"
 ]
 
 
