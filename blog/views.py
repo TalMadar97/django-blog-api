@@ -180,9 +180,3 @@ class FavoriteArticlesView(generics.ListAPIView):
     def get_queryset(self):
         """Return only the articles favorited by the logged-in user"""
         return Article.objects.filter(favorited_by=self.request.user)
-
-
-class ArticleDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Article.objects.all()
-    serializer_class = ArticleSerializer
-    lookup_field = 'pk'
