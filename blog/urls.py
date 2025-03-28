@@ -4,7 +4,8 @@ from .views import (
     ArticleListCreateView, ArticleDetailView,
     CommentListCreateView, CommentDetailView,
     RegisterView, ProfileView, like_article,
-    toggle_favorite, FavoriteArticlesView
+    toggle_favorite, FavoriteArticlesView,
+    ArticleList, ArticleDetail
 )
 
 urlpatterns = [
@@ -17,8 +18,8 @@ urlpatterns = [
     path('profile/', ProfileView.as_view(), name='profile'),
 
     # ✅ Article Management
-    path('articles/', ArticleListCreateView.as_view(), name='article-list'),
-    path('articles/<int:pk>/', ArticleDetailView.as_view(), name='article-detail'),
+    path('articles/', ArticleList.as_view(), name='article-list'),
+    path('articles/<int:pk>/', ArticleDetail.as_view(), name='article-detail'),
     path('articles/<int:article_id>/like/', like_article, name='like-article'),
 
     # ✅ Favorite Articles
