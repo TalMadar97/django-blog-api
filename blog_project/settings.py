@@ -8,7 +8,11 @@ SECRET_KEY = "django-insecure-*r5!-!5dq5mo1wrj)%9=^i$2f*1j6sqv+f7j@bwe)ptfp_@v#w
 
 DEBUG = True
 
-ALLOWED_HOSTS = ["myblog-backend-lvtd.onrender.com"]
+ALLOWED_HOSTS = [
+    "myblog-backend-lvtd.onrender.com",
+    "localhost",
+    "127.0.0.1"
+]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -65,7 +69,7 @@ DATABASES = {
         'HOST': config('DB_HOST'),
         'PORT': config('DB_PORT'),
         'OPTIONS': {
-            'sslmode': 'prefer',
+            'sslmode': 'require',
         }
     }
 }
@@ -100,6 +104,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3000",
     "https://myblog-sd38.onrender.com",
 ]
+
+CORS_ALLOW_CREDENTIALS = True
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
